@@ -3,6 +3,7 @@ package service
 import (
 	"database/sql"
 	"errors"
+	"food-website/model"
 	"golang.org/x/crypto/bcrypt"
 	"html/template"
 )
@@ -67,24 +68,25 @@ func IfEmpty(str string) error{
 	return nil
 }
 
-func CheckLogin (email , password string) error{
+func CheckLogin (user *model.User) error{
 	var db sql.DB
 	var hashedPassword string
 	db, err := GetDB()
 	if err != nil{
 		return errors.New("faled to open the database")
 	}
-	err = db.QueryRow("SELECT hashed_password FROM users WHERE email = ?;", email).Scan(&hashedPassword)
+	err = db.QueryRow("SELECT hashed_password FROM users WHERE email = ?;", user.Email).Scan(&hashedPassword)
 	switch err {
 	case sql.ErrNoRows:
 		return errors.New("invalid email or password")
 	default:
 		break
 	}
-	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(user.HashedPassword))
 	if err != nil {
 		return errors.New("invalid email or password")
 	}
+	user.HashedPassword = hashedPassword
 	db.Close()
 	return nil
 }

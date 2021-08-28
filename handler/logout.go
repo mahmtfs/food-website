@@ -1,10 +1,35 @@
 package handler
 
-import "net/http"
+import (
+	"net/http"
+	"time"
+)
 
 func LogoutPageHandler(w http.ResponseWriter, r *http.Request){
-	session, _ := store.Get(r, "session")
-	delete(session.Values, "email")
-	session.Save(r, w)
+	cookie, err := r.Cookie("access-token")
+	if err != nil{
+		if err != http.ErrNoCookie {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
+	} else{
+		cookie.Expires = time.Now()
+		http.SetCookie(w, cookie)
+	}
+
+	cookie, err = r.Cookie("refresh-token")
+	if err != nil{
+		if err != http.ErrNoCookie {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
+	} else {
+		cookie.Expires = time.Now()
+		http.SetCookie(w, cookie)
+	}
+
 	http.Redirect(w, r, "/login", 302)
+	return
 }

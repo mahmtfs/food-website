@@ -9,7 +9,26 @@ import (
 )
 
 func RegisterPageHandler(w http.ResponseWriter, r *http.Request){
-	err := templates.ExecuteTemplate(w, "register.html", nil)
+	err := service.CheckTokens(w, r)
+	switch {
+	case err == nil:
+		http.Redirect(w, r, "/", 302)
+		return
+	case err.Error() == "access token expired":
+		errUpdate := service.UpdateAccessToken(w, r, user)
+		if errUpdate != nil{
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
+	case err.Error() ==	"all tokens expired":
+		break
+	default:
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	err = templates.ExecuteTemplate(w, "register.html", nil)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("failed to execute a template"))
@@ -18,7 +37,7 @@ func RegisterPageHandler(w http.ResponseWriter, r *http.Request){
 }
 
 func RegisterHandler(w http.ResponseWriter, r *http.Request){
-	u := model.User{}
+	var u model.User
 	err := r.ParseForm()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -87,4 +106,5 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request){
 		return
 	}
 	http.Redirect(w, r, "/login", 302)
+	return
 }
