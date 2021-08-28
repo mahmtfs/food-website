@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Food | Login</title>
+</head>
+<body>
+    <h1>Login page</h1>
+    {{ if . }}
+    <div class = "error">{{ . }}</div>
+    {{ end }}
+    <form method="POST">
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email"><br><br>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password"><br><br>
+        <input type="submit" value="Submit">
+
+        <p><a href="/register">Sign up here</a></p>
+    </form>
+</body>
+</html>
